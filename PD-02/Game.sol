@@ -35,7 +35,7 @@ contract GachaGame {
         require(count <= balance, "You do not have enough funds to pull that many times!");
         
         for(uint i = 0; i < count; i++) {
-            currentCards.push(cards[0]);
+            currentCards.push(gachaPull(i));
             balance -= pullCost;
         }
         
@@ -46,13 +46,13 @@ contract GachaGame {
         return balance;
     }
     
-    function randomNumberGenerator() private view returns (uint8) {
-        uint8 randomnumber = uint8(uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, block.timestamp))) % 100);
+    function randomNumberGenerator(uint count) private view returns (uint8) {
+        uint8 randomnumber = uint8(uint(keccak256(abi.encodePacked(block.timestamp, count, block.timestamp))) % 100);
         return randomnumber;
     }
     
-    function gachaPull() private view returns (Card memory card) {
-        uint8 randomNumber = randomNumberGenerator();
+    function gachaPull(uint count) private view returns (Card memory card) {
+        uint8 randomNumber = randomNumberGenerator(count);
         
         if (randomNumber > 25) {
             return cards[0];
