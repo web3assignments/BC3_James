@@ -47,7 +47,7 @@ contract GachaGame {
     }
     
     function randomNumberGenerator(uint count) private view returns (uint8) {
-        uint8 randomnumber = uint8(uint(keccak256(abi.encodePacked(block.timestamp, count, block.timestamp))) % 100);
+        uint8 randomnumber = uint8(uint(keccak256(abi.encodePacked(block.timestamp, count, block.difficulty))) % 100);
         return randomnumber;
     }
     
