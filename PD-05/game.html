@@ -1,0 +1,74 @@
+<html>
+<head>
+<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+</head>
+<body>
+
+<button onclick="singlepull()">1 Pull</button>
+<button onclick="multipull()">10 Pull</button>
+<button onclick="checkBalance()">Check balance</button>
+<button onclick="getAllPulledCards()">Check pulled cards</button>
+
+<div id="output"></div>
+
+<script>
+
+var div = document.getElementById('output');
+
+const ABI = JSON.parse('[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"components":[{"internalType":"string","name":"Name","type":"string"},{"internalType":"uint8","name":"Value","type":"uint8"}],"indexed":false,"internalType":"struct GachaGame.Card[]","name":"cards","type":"tuple[]"},{"indexed":false,"internalType":"uint256","name":"count","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newBalance","type":"uint256"}],"name":"Pull","type":"event"},{"inputs":[],"name":"checkBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getAllPulledCards","outputs":[{"components":[{"internalType":"string","name":"Name","type":"string"},{"internalType":"uint8","name":"Value","type":"uint8"}],"internalType":"struct GachaGame.Card[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"pay","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"count","type":"uint256"}],"name":"pull","outputs":[],"stateMutability":"nonpayable","type":"function"}]');
+
+        if (typeof web3 !== 'undefined') {
+            web3 = new Web3(web3.currentProvider);
+        } else {
+            web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+        }
+        </script>
+
+        <script>
+        var address = "0x0e89bf97581D7fc913b66fB67CAB86a320eA72cA";
+        var test = new web3.eth.Contract(ABI, "0x8E1134d584fCE9C9d6D2a7A0f2A310c146818ec8");
+
+        function pull(amount) {
+          test.methods.pull(amount).send({from: address, gasPrice: web3.eth.gasPrice}).then((result) => {
+            console.log(result.events);
+            div.innerHTML = "";
+            if(amount == 1) {
+              div.innerHTML += result.events.Pull.returnValues[0][result.events.Pull.returnValues[0].length - 1];
+            } else {
+              for(var i = result.events.Pull.returnValues[0].length - 10; i < result.events.Pull.returnValues[0].length; i++) {
+                div.innerHTML += result.events.Pull.returnValues[0][i];
+              }
+            }
+          });
+        }
+
+        function singlepull() {
+          pull(1);
+        }
+        function multipull() {
+          pull(10);
+        }
+
+        function checkBalance() {
+          test.methods.checkBalance().call({from: address, gasPrice: web3.eth.gasPrice}).then((value) => {
+            div.innerHTML = "";
+
+div.innerHTML += value;
+        });
+      }
+        function getAllPulledCards() {
+          test.methods.getAllPulledCards().call({from: address, gasPrice: web3.eth.gasPrice}).then((value) => {
+            div.innerHTML = "";
+        for(var i = 0;i < value.length; i++) {
+          div.innerHTML += value[i];
+        }
+        });
+
+                }
+
+
+        </script>
+
+</script>
+</body>
+</html>
