@@ -26,10 +26,10 @@ const ABI = JSON.parse('[{"inputs":[],"stateMutability":"nonpayable","type":"con
 
         <script>
         var address = "0x0e89bf97581D7fc913b66fB67CAB86a320eA72cA";
-        var test = new web3.eth.Contract(ABI, "0x8E1134d584fCE9C9d6D2a7A0f2A310c146818ec8");
+        var contract = new web3.eth.Contract(ABI, "0x8E1134d584fCE9C9d6D2a7A0f2A310c146818ec8");
 
         function pull(amount) {
-          test.methods.pull(amount).send({from: address, gasPrice: web3.eth.gasPrice}).then((result) => {
+          contract.methods.pull(amount).send({from: address, gasPrice: web3.eth.gasPrice}).then((result) => {
             console.log(result.events);
             div.innerHTML = "";
             if(amount == 1) {
@@ -50,14 +50,14 @@ const ABI = JSON.parse('[{"inputs":[],"stateMutability":"nonpayable","type":"con
         }
 
         function checkBalance() {
-          test.methods.checkBalance().call({from: address, gasPrice: web3.eth.gasPrice}).then((value) => {
+          contract.methods.checkBalance().call({from: address, gasPrice: web3.eth.gasPrice}).then((value) => {
             div.innerHTML = "";
 
 div.innerHTML += value;
         });
       }
         function getAllPulledCards() {
-          test.methods.getAllPulledCards().call({from: address, gasPrice: web3.eth.gasPrice}).then((value) => {
+          contract.methods.getAllPulledCards().call({from: address, gasPrice: web3.eth.gasPrice}).then((value) => {
             div.innerHTML = "";
         for(var i = 0;i < value.length; i++) {
           div.innerHTML += value[i];
