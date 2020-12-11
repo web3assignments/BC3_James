@@ -1,6 +1,7 @@
 <html>
 <head>
 <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <body>
 
@@ -8,25 +9,41 @@
 <button onclick="multipull()">10 Pull</button>
 <button onclick="checkBalance()">Check balance</button>
 <button onclick="getAllPulledCards()">Check pulled cards</button>
+<form>
+<input type="number" name="amount" placeholder="Hoeveel ether wilt u inzetten (0.001 minimum)">
+<input type="submit" id="submitButton" value="pay amount">
+</form>
 
 <div id="output"></div>
 
 <script>
 
+var contract_address = "0x618932092d4574128114AE2EF06252bB04e65956";
+const ABI = JSON.parse('[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"components":[{"internalType":"string","name":"Name","type":"string"},{"internalType":"uint8","name":"Value","type":"uint8"}],"indexed":false,"internalType":"struct GachaGame.Card[]","name":"cards","type":"tuple[]"},{"indexed":false,"internalType":"uint256","name":"count","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newBalance","type":"uint256"}],"name":"Pull","type":"event"},{"inputs":[],"name":"checkBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getAllPulledCards","outputs":[{"components":[{"internalType":"string","name":"Name","type":"string"},{"internalType":"uint8","name":"Value","type":"uint8"}],"internalType":"struct GachaGame.Card[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"pay","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"count","type":"uint256"}],"name":"pull","outputs":[],"stateMutability":"nonpayable","type":"function"}]');
+var address;
+
+async function asyncloaded() {
+    if (typeof web3 !== 'undefined') {
+        web3 = new Web3(web3.currentProvider);
+    } else {
+        web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+    }
+    var result = await web3.eth.requestAccounts().catch(x => console.log(x.message));
+    console.log('web3 is present: ${web3.version}'); // note: use  (back quote)
+    const network = await web3.eth.net.getId().catch((reason) => console.log('Cannnot find network ${reason}'));
+    if (typeof network === 'undefined' || network != 4) { console.log("Please select Rinkeby test network"); return; }
+    console.log("Ethereum network: Rinkeby")
+    accounts = await web3.eth.getAccounts();
+    address = accounts[0];
+    contract = new web3.eth.Contract(ABI, contract_address);
+}
+window.addEventListener('load', asyncloaded);
+
 var div = document.getElementById('output');
 
-const ABI = JSON.parse('[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"components":[{"internalType":"string","name":"Name","type":"string"},{"internalType":"uint8","name":"Value","type":"uint8"}],"indexed":false,"internalType":"struct GachaGame.Card[]","name":"cards","type":"tuple[]"},{"indexed":false,"internalType":"uint256","name":"count","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newBalance","type":"uint256"}],"name":"Pull","type":"event"},{"inputs":[],"name":"checkBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getAllPulledCards","outputs":[{"components":[{"internalType":"string","name":"Name","type":"string"},{"internalType":"uint8","name":"Value","type":"uint8"}],"internalType":"struct GachaGame.Card[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"pay","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"count","type":"uint256"}],"name":"pull","outputs":[],"stateMutability":"nonpayable","type":"function"}]');
-
-        if (typeof web3 !== 'undefined') {
-            web3 = new Web3(web3.currentProvider);
-        } else {
-            web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
-        }
         </script>
 
         <script>
-        var address = "0x0e89bf97581D7fc913b66fB67CAB86a320eA72cA";
-        var contract = new web3.eth.Contract(ABI, "0x8E1134d584fCE9C9d6D2a7A0f2A310c146818ec8");
 
         function pull(amount) {
           contract.methods.pull(amount).send({from: address, gasPrice: web3.eth.gasPrice}).then((result) => {
@@ -65,6 +82,22 @@ div.innerHTML += value;
         });
 
                 }
+
+                $("#submitButton").click(function(e) {
+                  e.preventDefault();
+
+                  div.innerHTML = "";
+
+                  if ($('form').find('input[name="amount"]').val() < 0.001) {
+                    div.innerHTML = "0.001 ether is de minimum hoeveelheid";
+                    return;
+                  }
+
+                  contract.methods.pay().send({from: address, gasPrice: web3.eth.gasPrice, value: $('form').find('input[name="amount"]').val() * 1000000000000000000}).then((result, error) => {
+                    div.innerHTML = $('form').find('input[name="amount"]').val() + " is toegevoegd aan je account";
+
+                });
+              });
 
 
         </script>
