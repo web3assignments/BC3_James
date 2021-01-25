@@ -1,0 +1,112 @@
+<html>
+<head>
+<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+
+<button onclick="singlepull()">1 Pull</button>
+<button onclick="multipull()">10 Pull</button>
+<button onclick="checkBalance()">Check balance</button>
+<button onclick="getAllPulledCards()">Check pulled cards</button>
+<form>
+<input type="number" name="amount" placeholder="Hoeveel ether wilt u inzetten (0.001 minimum)">
+<input type="submit" id="submitButton" value="pay amount">
+</form>
+
+<div id="output"></div>
+
+<script>
+
+var contract_address = "jamesrocket.eth";
+const ABI = JSON.parse('[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"components":[{"internalType":"string","name":"Name","type":"string"},{"internalType":"uint8","name":"Value","type":"uint8"}],"indexed":false,"internalType":"struct GachaGame.Card[]","name":"cards","type":"tuple[]"},{"indexed":false,"internalType":"uint256","name":"count","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"newBalance","type":"uint256"}],"name":"Pull","type":"event"},{"inputs":[],"name":"checkBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getAllPulledCards","outputs":[{"components":[{"internalType":"string","name":"Name","type":"string"},{"internalType":"uint8","name":"Value","type":"uint8"}],"internalType":"struct GachaGame.Card[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"pay","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"count","type":"uint256"}],"name":"pull","outputs":[],"stateMutability":"nonpayable","type":"function"}]');
+var address;
+var contract;
+
+async function asyncloaded() {
+  web3 = new Web3(web3.currentProvider);
+    // if (typeof web3 !== 'undefined') {
+    //     web3 = new Web3(web3.currentProvider);
+    // } else {
+    //     web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+    // }
+    var result = await web3.eth.requestAccounts().catch(x => console.log(x.message));
+    console.log('web3 is present: ${web3.version}'); // note: use  (back quote)
+    const network = await web3.eth.net.getId().catch((reason) => console.log('Cannnot find network ${reason}'));
+    if (typeof network === 'undefined' || network != 4) { console.log("Please select Rinkeby test network"); return; }
+    console.log("Ethereum network: Rinkeby")
+    accounts = await web3.eth.getAccounts();
+    address = accounts[0];
+    // contract = new web3.eth.Contract(ABI, contract_address);
+    web3.eth.ens.getAddress(contract_address).then(function (_address) {
+      contract = new web3.eth.Contract(ABI, _address);
+  });
+}
+window.addEventListener('load', asyncloaded);
+
+var div = document.getElementById('output');
+
+        </script>
+
+        <script>
+
+        function pull(amount) {
+          contract.methods.pull(amount).send({from: address, gasPrice: web3.eth.gasPrice}).then((result) => {
+            console.log(result.events);
+            div.innerHTML = "";
+            if(amount == 1) {
+              div.innerHTML += result.events.Pull.returnValues[0][result.events.Pull.returnValues[0].length - 1];
+            } else {
+              for(var i = result.events.Pull.returnValues[0].length - 10; i < result.events.Pull.returnValues[0].length; i++) {
+                div.innerHTML += result.events.Pull.returnValues[0][i];
+              }
+            }
+          });
+        }
+
+        function singlepull() {
+          pull(1);
+        }
+        function multipull() {
+          pull(10);
+        }
+
+        function checkBalance() {
+          contract.methods.checkBalance().call({from: address, gasPrice: web3.eth.gasPrice}).then((value) => {
+            div.innerHTML = "";
+
+div.innerHTML += value;
+        });
+      }
+        function getAllPulledCards() {
+          contract.methods.getAllPulledCards().call({from: address, gasPrice: web3.eth.gasPrice}).then((value) => {
+            div.innerHTML = "";
+        for(var i = 0;i < value.length; i++) {
+          div.innerHTML += value[i];
+        }
+        });
+
+                }
+
+                $("#submitButton").click(function(e) {
+                  e.preventDefault();
+
+                  div.innerHTML = "";
+
+                  if ($('form').find('input[name="amount"]').val() < 0.001) {
+                    div.innerHTML = "0.001 ether is de minimum hoeveelheid";
+                    return;
+                  }
+
+                  contract.methods.pay().send({from: address, gasPrice: web3.eth.gasPrice, value: $('form').find('input[name="amount"]').val() * 1000000000000000000}).then((result, error) => {
+                    div.innerHTML = $('form').find('input[name="amount"]').val() + " is toegevoegd aan je account";
+
+                });
+              });
+
+
+        </script>
+
+</script>
+</body>
+</html>
