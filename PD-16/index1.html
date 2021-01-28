@@ -1,0 +1,102 @@
+<html>
+<head>
+<script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+</head>
+<body style="color: white; background-attachment: fixed; background-image: url('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwallpapercave.com%2Fwp%2Fwp1933983.png&f=1&nofb=1'); background-repeat: no-repeat; background-size: cover">
+<div class="container">
+  <h1>Gacha Game</h1>
+  <h3>Have fun pulling!</h3>
+
+  <button onclick="singlepull()" type="button" class="btn btn-primary">1 Pull</button>
+  <button onclick="multipull()" type="button" class="btn btn-primary">10 Pull</button>
+  <button onclick="getAllPulledCards()" type="button" class="btn btn-primary">Check pulled cards</button>
+
+  <div id="output" style="display: block">
+    <div class="d-flex align-items-center" id="loader" style="display: none !important">
+      <strong id="transaction-text">Waiting for transaction...</strong>
+      <strong id="card-text" style="display: none">Gathering cards...</strong>
+      <div class="spinner-border ml-auto" role="status" aria-hidden="true"></div>
+    </div>
+    <div id="card-output" class="row" style="color: black">
+    </div>
+  </div>
+</div>
+
+<script>
+
+var contract_address = "finaljamesrocket.eth";
+const ABI = JSON.parse('[{"inputs":[],"name":"close","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"pull","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"components":[{"internalType":"string","name":"Name","type":"string"},{"internalType":"uint8","name":"Value","type":"uint8"}],"indexed":false,"internalType":"struct GachaGame.Card","name":"card","type":"tuple"}],"name":"Pull","type":"event"},{"inputs":[{"internalType":"uint256","name":"count","type":"uint256"}],"name":"randomNumberGenerator","outputs":[{"internalType":"bytes32","name":"requestId","type":"bytes32"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"requestId","type":"bytes32"},{"internalType":"uint256","name":"randomness","type":"uint256"}],"name":"rawFulfillRandomness","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getAllPulledCards","outputs":[{"components":[{"internalType":"string","name":"Name","type":"string"},{"internalType":"uint8","name":"Value","type":"uint8"}],"internalType":"struct GachaGame.Card[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"name":"nonces","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]');
+var address;
+var contract;
+
+async function asyncloaded() {
+  web3 = new Web3(web3.currentProvider);
+    // if (typeof web3 !== 'undefined') {
+    //     web3 = new Web3(web3.currentProvider);
+    // } else {
+    //     web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+    // }
+    var result = await web3.eth.requestAccounts().catch(x => console.log(x.message));
+    console.log('web3 is present: ${web3.version}'); // note: use  (back quote)
+    const network = await web3.eth.net.getId().catch((reason) => console.log('Cannnot find network ${reason}'));
+    if (typeof network === 'undefined' || network != 4) { console.log("Please select Rinkeby test network"); return; }
+    console.log("Ethereum network: Rinkeby")
+    accounts = await web3.eth.getAccounts();
+    address = accounts[0];
+    web3.eth.ens.getAddress(contract_address).then(function (_address) {
+      contract = new web3.eth.Contract(ABI, _address);
+      contract.events.Pull({fromBlock: "latest"}, function(error, event){
+        document.getElementById("card-text").style.display = "none";
+        document.getElementById("transaction-text").style.display = "block";
+        document.getElementById("loader").style.setProperty("display", "none", "important");
+        addItemToList(event.returnValues.card.Name, event.returnValues.card.Value);
+      })
+  });
+}
+window.addEventListener('load', asyncloaded);
+
+var div = document.getElementById('card-output');
+
+        </script>
+
+        <script>
+
+        function pull(amount) {
+          document.getElementById("loader").style.display = "block";
+          var test = contract.methods.pull().send({from: address, gasPrice: web3.eth.gasPrice, value: amount * 1000000000000000}).then((result) => {
+            document.getElementById("card-text").style.display = "block";
+            document.getElementById("transaction-text").style.display = "none";
+          });
+        }
+
+        function singlepull() {
+          div.innerHTML = "";
+          pull(1);
+        }
+        function multipull() {
+          div.innerHTML = "";
+          pull(10);
+        }
+
+        function getAllPulledCards() {
+          contract.methods.getAllPulledCards().call().then((value) => {
+            div.innerHTML = "";
+        for(var i = 0;i < value.length; i++) {
+          addItemToList(value[i].Name, value[i].Value);
+        }
+        });
+
+                }
+
+                function addItemToList(title, number) {
+                  document.getElementById("card-output").innerHTML += '<div class="col-sm-4"><div class="card" style="width: 18rem;"><div class="card-body"><h5 class="card-title">'+title+'</h5><h6 class="card-subtitle mb-2 text-muted">'+number+'</h6></div></div></div>'
+                }
+
+
+        </script>
+
+</script>
+</body>
+</html>
